@@ -1,0 +1,139 @@
+{
+  "item": {
+    "id": "1890957641056781324",
+    "createdAt": "2026-10-21T19:35:16.960Z",
+    "updatedAt": null,
+    "position": 131072,
+    "name": "Courses",
+    "defaultView": "kanban",
+    "defaultCardType": "project",
+    "limitCardTypesToDefaultOne": false,
+    "alwaysDisplayCardCreator": false,
+    "displayCardAges": false,
+    "expandTaskListsByDefault": false,
+    "projectId": "1890957639840433158",
+    "isSubscribed": false
+  },
+  "included": {
+    "boardMemberships": [
+      {
+        "id": "1890957641090335757",
+        "createdAt": "2026-10-21T19:35:16.964Z",
+        "updatedAt": null,
+        "role": "editor",
+        "canComment": null,
+        "projectId": "1890957639840433158",
+        "boardId": "1890957641056781324",
+        "userId": "1890956856260559873"
+      }
+    ],
+    "labels": [],
+    "lists": [
+      {
+        "id": "1890957646484210724",
+        "createdAt": "2026-10-21T19:35:17.607Z",
+        "updatedAt": null,
+        "type": "active",
+        "position": 65536,
+        "name": "Liste",
+        "color": null,
+        "boardId": "1890957641056781324"
+      },
+      {
+        "id": "1890957641157444622",
+        "createdAt": "2026-10-21T19:35:16.967Z",
+        "updatedAt": null,
+        "type": "archive",
+        "position": null,
+        "name": null,
+        "color": null,
+        "boardId": "1890957641056781324"
+      },
+      {
+        "id": "1890957641165833231",
+        "createdAt": "2026-10-21T19:35:16.967Z",
+        "updatedAt": null,
+        "type": "trash",
+        "position": null,
+        "name": null,
+        "color": null,
+        "boardId": "1890957641056781324"
+      }
+    ],
+    "cards": [
+      {
+        "id": "1890957646710703141",
+        "createdAt": "2026-10-21T19:35:17.633Z",
+        "updatedAt": null,
+        "type": "project",
+        "position": 65536,
+        "name": "Pain",
+        "description": null,
+        "dueDate": null,
+        "isDueCompleted": null,
+        "stopwatch": null,
+        "commentsTotal": 0,
+        "isClosed": false,
+        "listChangedAt": "2026-10-21T19:35:17.632Z",
+        "boardId": "1890957641056781324",
+        "listId": "1890957646484210724",
+        "creatorUserId": "1890956856260559873",
+        "prevListId": null,
+        "coverAttachmentId": null,
+        "isSubscribed": false
+      }
+    ],
+    "cardMemberships": [],
+    "cardLabels": [],
+    "taskLists": [],
+    "tasks": [],
+    "customFieldGroups": [],
+    "customFields": [],
+    "customFieldValues": [],
+    "users": [
+      {
+        "id": "1890956856260559873",
+        "createdAt": "2026-10-21T19:33:43.401Z",
+        "updatedAt": "2026-10-21T19:35:17.866Z",
+        "email": "demo@example.com",
+        "role": "admin",
+        "name": "Demo User",
+        "username": "demo",
+        "phone": null,
+        "organization": null,
+        "language": "en-US",
+        "apiKeyPrefix": "qy4RfMOd",
+        "subscribeToOwnCards": false,
+        "subscribeToCardWhenCommenting": true,
+        "turnOffRecentCardHighlighting": false,
+        "enableFavoritesByDefault": true,
+        "defaultEditorMode": "wysiwyg",
+        "defaultHomeView": "groupedProjects",
+        "defaultProjectsOrder": "byDefault",
+        "isDeactivated": false,
+        "autoLogoutMode": "30m",
+        "isTotpEnabled": false,
+        "totpEnabledAt": null,
+        "avatar": null,
+        "totpRecoveryCodesRemaining": 0,
+        "isDefaultAdmin": true,
+        "lockedFieldNames": ["email", "password", "name", "role", "username"]
+      }
+    ],
+    "projects": [
+      {
+        "id": "1890957639840433158",
+        "createdAt": "2026-10-21T19:35:16.814Z",
+        "updatedAt": "2026-10-21T19:35:16.831Z",
+        "name": "Maison",
+        "description": null,
+        "backgroundType": null,
+        "backgroundGradient": null,
+        "isHidden": false,
+        "ownerProjectManagerId": "1890957639882376199",
+        "backgroundImageId": null
+      }
+    ],
+    "attachments": []
+  }
+}

@@ -1,67 +1,196 @@
-# Template de démonstration
+# Planka
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Amenez les tableaux kanban de votre [Planka](https://planka.app) dans Gladys :
+les cartes dues aujourd'hui, celles en retard, la prochaine échéance et le
+nombre de cartes de chaque liste d'un tableau. Une scène réagit quand une
+carte arrive dans une liste (`Fait`, `À vérifier`…) ou arrive à échéance, une
+autre ajoute « acheter du pain » depuis un bouton ou déplace une carte depuis
+un tag NFC, un appui sur le tableau de bord coche une échéance, et Gladys peut
+lire les cartes du jour chaque matin.
 
-## Ce que vous obtenez
+> **Vos retours sont les bienvenus.** Cette intégration a été testée contre un
+> vrai serveur Planka (image Docker `ghcr.io/plankanban/planka` 2.2.1,
+> octobre 2026), pas encore à l'usage au quotidien. Si quelque chose ne marche
+> pas comme décrit, dites-le sur le
+> [forum Gladys](https://community.gladysassistant.com) ou dans les
+> [issues](https://github.com/guim31/gladys-planka/issues).
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+## Ce qu'il faut
+
+- Gladys Assistant 5.1.0 ou plus récent.
+- Un **Planka 2 auto-hébergé** (testé avec la 2.2.1), joignable depuis Gladys.
+  Planka 1.x n'est pas pris en charge : son API est différente.
+- L'un des deux, pour un utilisateur de Planka membre des tableaux à suivre :
+  - une **clé d'API** (recommandé) : un administrateur la crée dans Planka,
+    **Administration** → **Utilisateurs** → menu de l'utilisateur → **Clé
+    API** → **Créer une clé API**. Copiez-la : Planka ne l'affiche qu'une
+    fois. Elle marche aussi avec la connexion à deux facteurs et
+    l'authentification unique ;
+  - ou l'**identifiant** (ou l'e-mail) et le **mot de passe** de
+    l'utilisateur. Il doit s'être **connecté une fois à l'interface web**,
+    pour accepter les conditions que Planka demande à la première connexion,
+    et ne pas utiliser la connexion à deux facteurs.
+
+L'intégration voit les tableaux que voit cet utilisateur, et agit **en son
+nom**. Un utilisateur simple lecteur d'un tableau peut le suivre, mais pas en
+ajouter ni en déplacer les cartes.
 
 ## Configuration
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+1. Dans Gladys, **Intégrations** → installez **Planka**.
+2. Dans l'écran **Configuration**, renseignez :
+   - **Adresse** : l'adresse de Planka comme dans le navigateur, par exemple
+     `http://192.168.1.20:3000`, ou `https://kanban.example.org` derrière un
+     proxy inverse (un préfixe comme `/planka` est conservé) ;
+   - **Clé d'API**, ou **Identifiant ou e-mail** et **Mot de passe**. Quand
+     la clé d'API est remplie, c'est elle qui sert.
+3. Options :
+   - **Tableaux suivis** : des noms séparés par des virgules
+     (`Maison, Courses`), ou le numéro d'un tableau (celui de son adresse).
+     Vide : tous les tableaux de l'utilisateur, 20 au plus ;
+   - **Accepter les certificats auto-signés** : pour une adresse en
+     `https://` avec un certificat auto-signé, sur votre propre serveur
+     seulement ;
+   - **Intervalle de rafraîchissement** : 1 à 10 minutes (5 par défaut). Les
+     échéances et minuit sont toujours suivis à l'heure, quel que soit
+     l'intervalle ;
+   - **Langue des noms de fonctionnalités** : les noms donnés aux
+     fonctionnalités à l'ajout d'un appareil (français par défaut), et les
+     textes envoyés aux scènes.
+4. Enregistrez, puis **Tester la connexion** : elle lit Planka et donne le
+   nombre de cartes ouvertes et de tableaux suivis.
+5. Dans l'onglet **Découverte**, ajoutez les appareils voulus.
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+## Appareils
 
-## Actions
+**Planka _tableau_** pour chaque tableau suivi, avec ces fonctionnalités :
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+| Fonctionnalité            | Ce qu'elle indique                                                                           |
+| ------------------------- | -------------------------------------------------------------------------------------------- |
+| `Cartes ouvertes`         | les cartes des listes actives (pas celles d'une liste fermée comme Fait, ni les archivées)   |
+| `Cartes dues aujourd'hui` | les cartes ouvertes dont l'échéance tombe aujourd'hui, passée ou non, sans case cochée       |
+| `Cartes en retard`        | les cartes ouvertes dont l'échéance est passée, sans case cochée                             |
+| une par liste             | le nombre de cartes de chacune des cinq premières listes actives, au nom de la liste         |
+| `Prochaine échéance`      | la carte dont l'échéance à venir est la plus proche, et sa date ; `Aucune` s'il n'y en a pas |
 
-## Scènes
-
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
-
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+« Aujourd'hui » est le jour dans le fuseau horaire de Gladys. Une carte dont
+la case d'échéance est cochée, ou qui est dans une liste fermée (le genre de
+liste « Fait » de Planka), n'est plus due. Les noms des fonctionnalités sont
+fixés à l'ajout de l'appareil : une liste renommée ensuite garde son ancien
+nom dans Gladys. Une nouvelle liste parmi les cinq premières fait proposer
+la mise à jour de l'appareil dans l'onglet **Découverte**.
 
 ## Tableau de bord
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Le widget **Cartes du jour** affiche deux tuiles (aujourd'hui, en retard), la
+liste des cartes à finir ce soir, les retards d'abord, avec leur heure, leur
+liste et leur tableau, et un bouton pour chacune des quatre plus urgentes :
+un appui coche l'échéance de la carte dans Planka. Choisissez un appareil
+tableau dans les réglages du widget pour ne voir que ses cartes ; laissez
+vide pour tous les tableaux suivis. Quand rien n'est dû, le widget le dit et
+donne la prochaine échéance.
+
+Les compteurs peuvent aussi aller sur le tableau de bord comme toute
+fonctionnalité d'appareil.
+
+## Scènes
+
+### Déclencheurs
+
+- **Carte Planka déplacée** : une carte est arrivée dans une autre liste de
+  son tableau. Filtres : le tableau (un appareil tableau), le **nom de la
+  liste**, exactement comme dans Planka (`Fait`). Informations transmises aux
+  actions : la carte, son numéro, son tableau, sa liste, la liste précédente,
+  son échéance.
+- **Carte Planka à échéance** : une carte ouverte a atteint son échéance,
+  sans que la case soit cochée.
+- **Carte Planka en retard** : à minuit, une carte due ce jour-là n'est
+  toujours pas faite. Une fois par carte et par échéance.
+
+Filtres des deux derniers : le tableau, le nom de la carte. Informations
+transmises aux actions : la carte, son numéro, son tableau, sa liste, son
+échéance.
+
+Un déplacement est vu à la lecture suivante : dans l'intervalle de
+rafraîchissement. Une carte créée, ou venue d'un autre tableau, n'est pas un
+déplacement. Une carte faite avant son échéance ne déclenche rien, et une
+échéance reculée à la main avant la lecture précédente non plus. Un redémarrage ne
+déclenche rien deux fois ; un déplacement fait pendant l'arrêt de
+l'intégration se déclenche à son redémarrage, et une échéance passée depuis
+moins d'une heure aussi.
+
+### Actions
+
+- **Ajouter une carte Planka** : un titre ; le tableau par son nom (vide : le
+  premier tableau suivi) ; la liste par son nom (vide : sa première liste active) ;
+  une **échéance** facultative, à l'heure de Gladys : `2026-10-24 18:00`,
+  `2026-10-24` (midi), ou à partir de maintenant `+30m`, `+2h`, `+3d`. La
+  carte va en bas de la liste. Résultats : la carte, son numéro, son tableau,
+  sa liste, son échéance.
+- **Déplacer une carte Planka** : la carte par son nom exact (majuscules et
+  accents ignorés) ou son numéro, la liste de destination par son nom, et le
+  tableau si deux tableaux ont une carte de ce nom. La carte va en bas de la
+  liste ; une carte d'une liste fermée peut revenir. Résultats : la carte,
+  son numéro, son tableau, sa liste, la liste précédente.
+- **Lire les cartes Planka du jour** : les cartes à finir ce soir en une
+  phrase (`3 carte(s) à finir ce soir : …. 2 en retard.`), pour tous les
+  tableaux suivis ou l'un d'eux. Résultats : la phrase, le nombre de cartes à
+  finir ce soir, de cartes en retard. Envoyez la phrase dans un message, ou
+  faites-la dire à Gladys.
+
+Les champs acceptent les variables de scène : `{{triggerEvent.data.card}}`
+déplace la carte qui a déclenché la scène.
+
+### Idées de scènes
+
+- À 7 h 30, **Lire les cartes Planka du jour**, puis envoyer la phrase sur
+  Telegram.
+- **Carte Planka déplacée** dans la liste `Fait` du tableau `Maison` :
+  envoyer « bravo » à la famille, ou éteindre la lampe de rappel.
+- Quand le lave-linge s'arrête, **Ajouter une carte Planka**
+  `Étendre le linge` dans `À faire`, échéance `+1h`.
+- Un tag NFC sur les poubelles lance **Déplacer une carte Planka**
+  `Sortir les poubelles` vers `Fait`.
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **« Planka ne répond pas »** : vérifiez l'adresse et le port depuis la
+  machine de Gladys (l'adresse ouvre Planka dans un navigateur).
+- **« Clé d'API, identifiant ou mot de passe refusé »** : la clé a été
+  régénérée ou supprimée, ou le mot de passe a changé. Créez une nouvelle clé.
+- **« Connectez-vous une fois dans l'interface de Planka pour accepter ses
+  conditions »** : connectez-vous une fois avec cet utilisateur dans le
+  navigateur, acceptez les conditions, puis **Tester la connexion** à
+  nouveau.
+- **« Connexion à deux facteurs : utilisez plutôt une clé d'API »** : un
+  utilisateur à deux facteurs ne peut pas se connecter depuis Gladys avec un
+  mot de passe.
+- **« Aucune API Planka 2 à cette adresse »** : l'adresse répond, mais pas
+  avec l'API de Planka 2 : vérifiez le port, le préfixe, ou la version de
+  Planka.
+- **« L'adresse redirige »** : saisissez l'adresse en `https://`.
+- **« Cet utilisateur n'a pas ce droit »** : l'utilisateur n'est que lecteur
+  du tableau.
+- **Un tableau manque** : l'utilisateur doit être membre du tableau (ou gérer
+  son projet) ; un nom saisi dans **Tableaux suivis** qui ne correspond à
+  aucun tableau est ignoré, et **Tester la connexion** l'indique. Au-delà de
+  20 tableaux, listez ceux à suivre.
+- **« Plusieurs cartes portent ce nom »** : indiquez le tableau, ou le numéro
+  de la carte.
+- Logs : `LOG_LEVEL=debug` sur le conteneur montre chaque lecture.
+
+## Limites
+
+- Planka est lu toutes les 1 à 10 minutes (et à chaque échéance et à minuit) :
+  un changement dans Planka apparaît dans Gladys dans ce délai. Les webhooks
+  de Planka et sa connexion en direct ne sont pas utilisés.
+- Une requête pour les projets, plus une par tableau suivi, à chaque lecture.
+- L'intégration ajoute des cartes, les déplace et coche leurs échéances ; elle
+  ne les modifie pas, ne les supprime pas, ne les assigne pas, et ne lit ni
+  leurs tâches, ni leurs étiquettes, ni leurs commentaires.
+- Seules les cinq premières listes actives d'un tableau ont un compteur.
+- Testée avec Planka 2.2.1. Planka 1.x n'est pas pris en charge.
+- Gladys ne garde aucune donnée de Planka hors de `/data/planka-state.json`
+  (l'heure de la dernière lecture et la liste de chaque carte, pour qu'aucun
+  événement ne parte deux fois).
+- Sans lien avec Planka ni PLANKA Software GmbH.

@@ -31,16 +31,22 @@ pushing.
 ## Architecture
 
 ```
-index.js                          SDK wiring only: handlers registered before connect()
-src/devices/index.js              registry of the device blueprints + dispatch helpers
-src/devices/<type>.js             one device type per file (buildDevice, onPoll, onSetValue...)
-src/scenes.js                     scene action handlers (manifest `scene_actions`)
-src/widgets.js                    dashboard widget handlers (manifest `widgets`)
+index.js                          SDK wiring only: src/app.js registers the handlers before connect()
+src/app.js                        every SDK handler -> the hub (also used by the tests)
+src/hub.js                        reading timer, states, scene events, commands, deduplicated logs
+src/devices.js                    board devices: features, names (4 languages), states
+src/planka/client.js              Planka 2 API client (/api, X-Api-Key or password login), errors by kind
+src/planka/http.js                node:http/https request (self-signed certificates on request)
+src/planka/model.js               boards, lists, cards; local day; counters; lookup by id or name
+src/scenes.js                     scene actions add_card, move_card, read_today
+src/widgets.js                    dashboard widget `cards_today` (manifest `widgets`)
+src/texts.js                      connection, error, report, action and toast texts (4 languages)
 src/config.js                     DEFAULT_CONFIG (mirrors the manifest defaults) + normalization
-src/weather.js                    example driver (Open-Meteo)
+src/store.js                      /data/planka-state.json (instance, last reading, list of each card)
 gladys-assistant-integration.json manifest: name, config_schema, actions, image...
-docs/en.md, docs/fr.md            user documentation, re-hosted by Gladys (mandatory)
+docs/{en,fr,de,es}.md             user documentation, re-hosted by Gladys (en and fr mandatory)
 test/                             node --test, against the SDK's fake Gladys (integration-sdk/testing)
+                                  and helpers/fakePlanka.js (built from test/fixtures/planka)
 .github/scripts/release.mjs       release helpers (manifest bump, changelog), tested in test/
 ```
 
@@ -70,8 +76,9 @@ test/                             node --test, against the SDK's fake Gladys (in
   `type: "provider"`: 5.1.0). `test/manifest.test.js` ties the manifest to the
   code (defaults, action, scene and widget handlers): change both sides
   together.
-- **User-facing text** is bilingual (English and French): action messages,
-  manifest texts, and `docs/en.md` / `docs/fr.md`, kept in sync.
+- **User-facing text** exists in English, French, German and Spanish: action
+  messages, widget content, feature names, manifest texts, and
+  `docs/{en,fr,de,es}.md`, kept in sync (`test/i18n.test.js`).
 - **Style.** Prettier formats, ESLint catches mistakes. Comments explain why,
   in English. Tests never touch the network.
 
@@ -197,6 +204,38 @@ code de ce dépôt. Compléter ce fichier quand un nouveau piège est découvert
 - Les filtres de scène ne font qu'égalité et appartenance : un seuil reste le travail d'un capteur.
 - **Les clés de widgets, de déclencheurs et d'actions sont figées une fois publiées.**
 - `gladys_version` `>=5.1.0` dès qu'il y a widgets, déclencheurs ou actions de scène.
+
+## Planka (propre à ce dépôt)
+
+- **API** vérifiée sur `ghcr.io/plankanban/planka` **2.2.1** + PostgreSQL 16 en Docker le 21/10/2026
+  (code lu : `server/config/routes.js`, `api/controllers`, tag `v2.2.1`). Planka 1.x n'est pas visé.
+- **Authentification** : clé d'API en `X-Api-Key` (2.x, créée par un **admin** seulement :
+  `POST /api/users/:id/api-key`, ou Administration → Utilisateurs → API Key), ou
+  `POST /api/access-tokens` `{ emailOrUsername, password }` → `{ item: JWT }` (valable un an), en
+  `Authorization: Bearer`. Le jeton reste en mémoire ; un 401 relance **une** connexion.
+- **Première connexion** d'un utilisateur : **403** `{ step: "accept-terms", pendingToken }` tant que
+  les conditions ne sont pas acceptées (dans l'interface, ou `GET /api/terms` → `signature`, puis
+  `POST /api/access-tokens/accept-terms { pendingToken, signature }`). Deux facteurs : 403 aussi
+  (« TOTP verification required »). La clé d'API contourne les deux.
+- **Ids en chaînes** de 64 bits (`"1890957640519910408"`) : au-delà de `Number.MAX_SAFE_INTEGER`,
+  ne jamais les convertir en nombre. Variables de scène `card_id` en `string`.
+- `GET /api/projects` → `{ items: projets, included: { boards } }`. `GET /api/boards/:id` →
+  `included.lists` (types `active`, `closed`, et les listes système `archive` et `trash`, sans nom)
+  et `included.cards` des seules listes `active` et `closed`. Une carte d'une liste `closed` a
+  `isClosed: true`. L'échéance : `dueDate` (ISO) et `isDueCompleted` (la case cochée).
+- **Créer ou déplacer** une carte vers une liste `active` exige `position` (422 « Position must be
+  present ») : on met `max(position) + 65536` (le pas de Planka), en bas de la liste. `PATCH
+/api/cards/:id` est partiel (ne remplace pas la carte, contrairement à Vikunja).
+- **Déplacement** (`card_moved`) : comparaison de la liste de chaque carte entre deux lectures, la
+  carte → liste étant gardée dans `/data/planka-state.json` (un déplacement pendant l'arrêt part au
+  redémarrage). Une carte inconnue (créée, venue d'un autre tableau) n'est pas un déplacement. On
+  n'utilise ni `listChangedAt` (horloge du serveur) ni `prevListId` (resté `null` après un
+  déplacement entre listes actives sur la 2.2.1).
+- Échéance et minuit : même modèle que gladys-vikunja (moments franchis depuis la dernière lecture,
+  moins d'une heure de retard).
+- Hors `/api`, l'interface répond sa page HTML en 200 sur tout chemin : « pas Planka ».
+- Pour tester : `DEFAULT_ADMIN_EMAIL/PASSWORD/NAME/USERNAME`, `SECRET_KEY`, `DATABASE_URL`,
+  `BASE_URL` ; l'image démarre avant PostgreSQL et sort en erreur : la relancer.
 
 ## Store
 

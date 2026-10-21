@@ -30,6 +30,23 @@ Gladys before reporting a problem.
 
 In scope: the code of this repository and the Docker image it publishes.
 
+What the integration handles:
+
+- the **Planka API key**, or the **username and password** of a Planka user,
+  stored by Gladys in the integration configuration (`secret` fields for the
+  key and the password), sent only to the configured Planka address (the key
+  in the `X-Api-Key` header, the password to `POST /api/access-tokens`), and
+  never logged. The session token Planka answers is kept in memory only;
+- under `/data`, only `planka-state.json`: the configured address, the time
+  of the last reading and, for each followed card, its id and the id of its
+  list (no secret, no card name);
+- network: outgoing HTTP(S) requests to the configured Planka address only.
+  With "Accept self-signed certificates" ticked, the certificate of that
+  address is not verified.
+
+Prefer an API key to a password: it can be revoked in Planka without changing
+the password of the user.
+
 Out of scope: Gladys Assistant itself (see its
 [security policy](https://github.com/GladysAssistant/Gladys/security/policy)),
-and the third-party services and devices the integration talks to.
+and Planka itself.

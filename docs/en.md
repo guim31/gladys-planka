@@ -1,61 +1,173 @@
-# Demo Devices Template
+# Planka
 
-This is the user documentation of the integration. Gladys re-hosts this file
-and shows a permanent **Documentation** link to it in the Configuration screen
-(in the user's language, with English as the fallback) — it is when
-configuring that the user needs it most. Keep the short onboarding hints in
-the `section` blocks of the manifest `config_schema`; put the long
-step-by-step (screenshots, troubleshooting…) here.
+Bring the kanban boards of your [Planka](https://planka.app) into Gladys: the
+cards due today, the overdue ones, the next due date and the number of cards
+in each list of a board. A scene reacts when a card arrives in a list (`Done`,
+`To check`…) or falls due, another one adds "buy bread" from a button or moves
+a card from an NFC tag, a tap on the dashboard ticks a due date, and Gladys
+can read out the cards of the day every morning.
 
-## What you get
+> **Feedback welcome.** This integration was tested against a real Planka
+> server (Docker image `ghcr.io/plankanban/planka` 2.2.1, October 2026), not
+> yet in everyday use. If something does not work as described, please say so
+> on the [Gladys forum](https://community.gladysassistant.com) or in the
+> [issues](https://github.com/guim31/gladys-planka/issues).
 
-Six demo devices show up after installation: a weather station (real data
-from Open-Meteo), a switch, a dimmable light, a smart plug with power
-metering, a motion sensor and a camera.
+## What you need
 
-## Configuration
+- Gladys Assistant 5.1.0 or later.
+- A **self-hosted Planka 2** (tested with 2.2.1), reachable from Gladys.
+  Planka 1.x is not supported: its API is different.
+- One of these, for a Planka user who is a member of the boards to follow:
+  - an **API key** (recommended): an administrator creates it in Planka,
+    **Administration** → **Users** → the menu of the user → **API Key** →
+    **Create API key**. Copy it: Planka shows it only once. It works with
+    two-factor login and single sign-on too;
+  - or the **username** (or e-mail) and **password** of the user. This user
+    must have **logged in once in the web app**, to accept the terms Planka
+    asks for at the first login, and must not use two-factor login.
 
-1. Open the **Configuration** tab of the integration.
-2. Set the **latitude** and **longitude** the demo weather station should
-   observe (they default to Paris), and pick your temperature unit.
-   The **refresh interval** sets how often the weather station and the
-   plug's power are read: every 5 minutes by default, every minute at most.
-3. Save: the devices appear in the **Discovery** tab, ready to be added.
+The integration sees the boards this user sees, and acts **as this user**. A
+user who is only a viewer of a board can follow it, but cannot add or move
+its cards.
 
-The **Prefer the local connection** toggle drives the demo plug: it reports
-the channel it actually uses as a badge (local or cloud), with an orange dot
-when it runs degraded (local refused, cloud fallback).
+## Set up
 
-## Actions
+1. In Gladys, **Integrations** → install **Planka**.
+2. In the **Configuration** screen, fill in:
+   - **Address**: the address of Planka as in the browser, for example
+     `http://192.168.1.20:3000`, or `https://kanban.example.org` behind a
+     reverse proxy (a path prefix such as `/planka` is kept);
+   - **API key**, or **Username or e-mail** and **Password**. When the API key
+     is filled in, it is used.
+3. Options:
+   - **Followed boards**: names separated by commas (`Home, Shopping`), or
+     the id of a board (the number in its address). Empty: every board of the
+     user, 20 at most;
+   - **Accept self-signed certificates**: for an `https://` address with a
+     self-signed certificate, on your own server only;
+   - **Refresh interval**: 1 to 10 minutes (5 by default). Due dates and
+     midnight are always followed on time, whatever the interval;
+   - **Language of the feature names**: the names given to the features when
+     a device is added (French by default), and the texts sent to scenes.
+4. Save, then **Test the connection**: it reads Planka and gives the number of
+   open cards and of followed boards.
+5. In the **Discovery** tab, add the devices you want.
 
-- **Test the weather provider** — performs a live request to Open-Meteo and
-  shows the current temperature and humidity under the button.
-- **Identify a device** — pick one of your devices in the list and it will
-  signal itself (the demo light "blinks" in the logs).
+## Devices
 
-## Scenes
+**Planka _board_** for each followed board, with these features:
 
-The integration adds its own cards to the scene editor (Gladys 5.1 or
-later), under the **Integrations** category:
+| Feature           | What it says                                                                           |
+| ----------------- | -------------------------------------------------------------------------------------- |
+| `Open cards`      | the cards of the active lists (not those of a closed list such as Done, nor archived)  |
+| `Cards due today` | open cards whose due date falls today, passed or not, its due checkbox not ticked      |
+| `Overdue cards`   | open cards whose due date has passed, its due checkbox not ticked                      |
+| one per list      | the number of cards of each of the first five active lists, named after the list       |
+| `Next due date`   | the card with the earliest due date still ahead, and its date; `None` if there is none |
 
-- **Motion detected** (trigger) — starts the scene when a demo motion sensor
-  sees something move. Optionally pick the sensor and what moved (person,
-  animal); left empty, any detection matches. The following actions can
-  read what moved with `{{triggerEvent.data.target}}`.
-- **Identify a device** (action) — makes the chosen device signal itself.
-  It returns whether the device could signal itself, so the following
-  actions can depend on it.
+"Today" is the day in the time zone of Gladys. A card whose due checkbox is
+ticked, or that sits in a closed list (Planka's "Done" kind of list), is no
+longer due. Feature names are set when the device is added: a list renamed
+later keeps its old name in Gladys. A new list among the first five makes
+Gladys offer to update the device in the **Discovery** tab.
 
 ## Dashboard
 
-Add the **Demo status** widget to a dashboard: it shows the live
-temperature of the weather station and the power of the office plug, the
-connection the plug currently uses (orange when degraded) and the observed
-location. Its **Identify the light** button makes the demo light signal
-itself.
+The **Today's cards** widget shows two tiles (due today, overdue), the list of
+the cards due by tonight, overdue first, with their time, their list and their
+board, and a button for each of the four most urgent: a tap ticks the due
+date of the card in Planka. Choose a board device in the widget settings to
+see only its cards; leave it empty for every followed board. When nothing is
+due, the widget says so and gives the next due date.
+
+The counters can also go on the dashboard as any device feature.
+
+## Scenes
+
+### Triggers
+
+- **Planka card moved**: a card arrived in another list of its board. Filters:
+  the board (a board device), the **list name**, exactly as written in Planka
+  (`Done`). Information passed on to the actions: the card, its id, its
+  board, its list, the previous list, its due date.
+- **Planka card due**: an open card reached its due time, its due checkbox
+  not ticked.
+- **Planka card overdue**: at midnight, a card due that day is still not
+  done. Once per card and due date.
+
+Filters of the last two: the board, the card name. Information passed on to
+the actions: the card, its id, its board, its list, its due date.
+
+A move is seen at the next reading: within the refresh interval. A card
+created, or brought from another board, is no move. A card done before its
+due time fires nothing, and a due date moved by hand to a moment before the
+previous reading fires nothing either. A restart does not fire anything twice; a move made while
+the integration was stopped fires when it starts again, and so does a due
+time less than an hour old.
+
+### Actions
+
+- **Add a Planka card**: a title; the board by name (empty: the first
+  followed board); the list by name (empty: its first active list); an optional
+  **due date**, in the time of Gladys: `2026-10-24 18:00`, `2026-10-24`
+  (noon), or from now `+30m`, `+2h`, `+3d`. The card goes at the bottom of
+  the list. Results: the card, its id, its board, its list, its due date.
+- **Move a Planka card**: the card by its exact name (case and accents
+  ignored) or its id, the destination list by name, and the board if two
+  boards hold a card of that name. The card goes at the bottom of the list;
+  a card in a closed list can come back. Results: the card, its id, its
+  board, its list, the previous list.
+- **Read today's Planka cards**: the cards due by tonight as a sentence
+  (`3 card(s) due by tonight: …. 2 overdue.`), for every followed board or one
+  of them. Results: the sentence, the number of cards due by tonight, of
+  overdue cards. Send the sentence in a message, or have Gladys say it.
+
+The fields accept scene variables: `{{triggerEvent.data.card}}` moves the card
+that triggered the scene.
+
+### Scene ideas
+
+- At 7:30, **Read today's Planka cards**, then send the sentence on Telegram.
+- **Planka card moved** to the `Done` list of the `Home` board: send "well
+  done" to the family, or turn off the reminder light.
+- When the washing machine stops, **Add a Planka card** `Hang the laundry`
+  in `To do`, due `+1h`.
+- An NFC tag on the bins runs **Move a Planka card** `Take out the bins` to
+  `Done`.
 
 ## Troubleshooting
 
-The integration logs everything it does: check the integration logs from the
-Gladys UI (or `docker logs` on the host) with `LOG_LEVEL=debug` for the full
-detail.
+- **"Planka does not answer"**: check the address and the port from the
+  Gladys machine (the address opens Planka in a browser).
+- **"API key, username or password refused"**: the key was regenerated or
+  deleted, or the password changed. Create a new key.
+- **"Log in once in the Planka web app to accept its terms"**: log in once
+  with this user in the browser, accept the terms, then **Test the
+  connection** again.
+- **"Two-factor login: use an API key instead"**: a user with two-factor login
+  cannot log in from Gladys with a password.
+- **"No Planka 2 API at this address"**: the address answers, but not with the
+  Planka 2 API: check the port, the path prefix, or the version of Planka.
+- **"The address redirects"**: enter the `https://` address.
+- **"This user may not do this"**: the user is only a viewer of the board.
+- **A board is missing**: the user must be a member of the board (or manage
+  its project); a name typed in **Followed boards** that matches no board is
+  ignored, and **Test the connection** lists it. Beyond 20 boards, list the
+  ones to follow.
+- **"Several cards have this name"**: give the board, or the id of the card.
+- Logs: `LOG_LEVEL=debug` on the container shows every reading.
+
+## Limits
+
+- Planka is read every 1 to 10 minutes (and at each due time and at
+  midnight): a change in Planka shows up in Gladys within that delay. Planka
+  webhooks and its live connection are not used.
+- One request for the projects, plus one per followed board, at each reading.
+- The integration adds cards, moves them and ticks their due dates; it does
+  not edit, delete or assign them, nor read their tasks, labels or comments.
+- Only the first five active lists of a board get a counter.
+- Tested with Planka 2.2.1. Planka 1.x is not supported.
+- Gladys keeps no Planka data beyond `/data/planka-state.json` (the time of
+  the last reading and the list of each card, so that no event fires twice).
+- Not affiliated with Planka or PLANKA Software GmbH.
