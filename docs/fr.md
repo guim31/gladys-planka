@@ -114,7 +114,7 @@ transmises aux actions : la carte, son numéro, son tableau, sa liste, son
 Un déplacement est vu à la lecture suivante : dans l'intervalle de
 rafraîchissement. Une carte créée, ou venue d'un autre tableau, n'est pas un
 déplacement. Une carte faite avant son échéance ne déclenche rien, et une
-échéance reculée à la main dans le passé non plus. Un redémarrage ne
+échéance reculée à la main avant la lecture précédente non plus. Un redémarrage ne
 déclenche rien deux fois ; un déplacement fait pendant l'arrêt de
 l'intégration se déclenche à son redémarrage, et une échéance passée depuis
 moins d'une heure aussi.
@@ -122,7 +122,7 @@ moins d'une heure aussi.
 ### Actions
 
 - **Ajouter une carte Planka** : un titre ; le tableau par son nom (vide : le
-  premier tableau suivi) ; la liste par son nom (vide : sa première liste) ;
+  premier tableau suivi) ; la liste par son nom (vide : sa première liste active) ;
   une **échéance** facultative, à l'heure de Gladys : `2026-10-24 18:00`,
   `2026-10-24` (midi), ou à partir de maintenant `+30m`, `+2h`, `+3d`. La
   carte va en bas de la liste. Résultats : la carte, son numéro, son tableau,

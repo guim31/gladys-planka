@@ -112,7 +112,7 @@ Fälligkeit.
 Eine Verschiebung wird beim nächsten Lesen erkannt: innerhalb des
 Aktualisierungsintervalls. Eine neu erstellte oder aus einem anderen Board
 geholte Karte ist keine Verschiebung. Eine vor ihrer Fälligkeit erledigte
-Karte löst nichts aus, ebenso wenig eine von Hand in die Vergangenheit
+Karte löst nichts aus, ebenso wenig eine von Hand vor das vorherige Lesen
 verschobene Fälligkeit. Ein Neustart löst nichts doppelt aus; eine
 Verschiebung, während die Integration gestoppt war, löst beim Neustart aus,
 ebenso eine Fälligkeit, die weniger als eine Stunde zurückliegt.
@@ -120,7 +120,7 @@ ebenso eine Fälligkeit, die weniger als eine Stunde zurückliegt.
 ### Aktionen
 
 - **Planka-Karte hinzufügen**: ein Titel; das Board nach Namen (leer: das
-  erste verfolgte Board); die Liste nach Namen (leer: seine erste Liste); eine
+  erste verfolgte Board); die Liste nach Namen (leer: seine erste aktive Liste); eine
   optionale **Fälligkeit**, in der Uhrzeit von Gladys: `2026-10-24 18:00`,
   `2026-10-24` (Mittag), oder ab jetzt `+30m`, `+2h`, `+3d`. Die Karte kommt
   ans Ende der Liste. Ergebnisse: die Karte, ihre ID, ihr Board, ihre Liste,

@@ -151,7 +151,7 @@ function localMidnight(year, month, day, timeZone) {
   return start;
 }
 
-/** UTC instant of a local wall-clock time (the first one, in a DST overlap). */
+/** UTC instant of a local wall-clock time (in a DST overlap, one of the two). */
 export function localTime(year, month, day, hour, minute, timeZone) {
   const wall = Date.UTC(year, month - 1, day, hour, minute);
   const first = wall - offsetAt(wall, timeZone);

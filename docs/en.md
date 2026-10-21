@@ -101,15 +101,15 @@ the actions: the card, its id, its board, its list, its due date.
 
 A move is seen at the next reading: within the refresh interval. A card
 created, or brought from another board, is no move. A card done before its
-due time fires nothing, and a due date moved by hand into the past fires
-nothing either. A restart does not fire anything twice; a move made while
+due time fires nothing, and a due date moved by hand to a moment before the
+previous reading fires nothing either. A restart does not fire anything twice; a move made while
 the integration was stopped fires when it starts again, and so does a due
 time less than an hour old.
 
 ### Actions
 
 - **Add a Planka card**: a title; the board by name (empty: the first
-  followed board); the list by name (empty: its first list); an optional
+  followed board); the list by name (empty: its first active list); an optional
   **due date**, in the time of Gladys: `2026-10-24 18:00`, `2026-10-24`
   (noon), or from now `+30m`, `+2h`, `+3d`. The card goes at the bottom of
   the list. Results: the card, its id, its board, its list, its due date.

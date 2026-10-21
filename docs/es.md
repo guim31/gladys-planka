@@ -113,7 +113,7 @@ vencimiento.
 Un movimiento se ve en la lectura siguiente: dentro del intervalo de
 actualización. Una tarjeta creada, o traída de otro tablero, no es un
 movimiento. Una tarjeta hecha antes de su vencimiento no dispara nada, ni
-tampoco un vencimiento movido a mano al pasado. Un reinicio no dispara nada
+tampoco un vencimiento movido a mano antes de la lectura anterior. Un reinicio no dispara nada
 dos veces; un movimiento hecho mientras la integración estaba detenida se
 dispara al reiniciar, igual que un vencimiento de hace menos de una hora.
 
@@ -121,7 +121,7 @@ dispara al reiniciar, igual que un vencimiento de hace menos de una hora.
 
 - **Añadir una tarjeta de Planka**: un título; el tablero por su nombre
   (vacío: el primer tablero seguido); la lista por su nombre (vacío: su
-  primera lista); un **vencimiento** opcional, en la hora de Gladys:
+  primera lista activa); un **vencimiento** opcional, en la hora de Gladys:
   `2026-10-24 18:00`, `2026-10-24` (mediodía), o desde ahora `+30m`, `+2h`,
   `+3d`. La tarjeta va al final de la lista. Resultados: la tarjeta, su
   número, su tablero, su lista, su vencimiento.

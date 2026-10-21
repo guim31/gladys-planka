@@ -293,9 +293,13 @@ export class PlankaHub {
     }
     if (this.readAt !== 0) {
       await this.publishDevices();
-      if (!this.error) {
+      // The configuration may change while Gladys answers: never write the
+      // old reading's events nor its card lists under the new one.
+      if (!this.error && client === this.client) {
         await this.publishStates();
-        await this.fireEvents(now);
+        if (client === this.client) {
+          await this.fireEvents(now);
+        }
       }
     }
     await this.publishTransports();
@@ -311,9 +315,16 @@ export class PlankaHub {
     if (wanted.length > 0) {
       const found = new Set();
       for (const query of wanted) {
-        const { item } = findByIdOrName(boards, query);
+        const { item, reason } = findByIdOrName(boards, query);
         if (item) {
           found.add(item.id);
+        } else if (reason === 'ambiguous') {
+          // Two boards of that name (in two projects): both are followed.
+          for (const board of boards) {
+            if (findByIdOrName([board], query).item) {
+              found.add(board.id);
+            }
+          }
         } else {
           unknown.push(query);
         }
@@ -403,14 +414,25 @@ export class PlankaHub {
   // --- Publishing to Gladys --------------------------------------------------
 
   devices() {
-    const names = new Map();
-    for (const board of this.followed) {
-      names.set(board.name, (names.get(board.name) ?? 0) + 1);
-    }
-    return this.followed.map((board) => {
-      // Two projects may hold a board of the same name: the project tells them apart.
+    const count = (list, key) => {
+      const counts = new Map();
+      for (const item of list) {
+        counts.set(key(item), (counts.get(key(item)) ?? 0) + 1);
+      }
+      return counts;
+    };
+    const byName = count(this.followed, (board) => board.name);
+    // Two boards of the same name: the project tells them apart, else the
+    // end of the id (two boards of that name in one project).
+    const withProject = this.followed.map((board) =>
+      byName.get(board.name) > 1 ? `${board.name.slice(0, 30)} (${board.projectName})` : board.name,
+    );
+    const byLabel = count(withProject, (name) => name);
+    return this.followed.map((board, index) => {
       const name =
-        names.get(board.name) > 1 ? `${board.name} (${board.projectName || board.id})` : board.name;
+        byLabel.get(withProject[index]) > 1
+          ? `${board.name.slice(0, 30)} #${board.id.slice(-6)}`
+          : withProject[index];
       return buildBoard(this.gladys, { ...board, name }, this.language);
     });
   }
@@ -555,7 +577,9 @@ export class PlankaHub {
     for (const card of this.cards) {
       const base = this.eventData(card);
       const before = known[card.id];
-      if (before !== undefined && before !== card.listId) {
+      // A list of another board: the card changed board, which is no move.
+      const sameBoard = this.listTitle(card.boardId, before) !== '';
+      if (before !== undefined && before !== card.listId && sameBoard) {
         events.push({
           at: now,
           key: TRIGGERS.MOVED,
@@ -575,17 +599,19 @@ export class PlankaHub {
       }
     }
     events.sort((a, b) => a.at - b.at);
+    // Gladys refused (restarting?): a move is tried again at the next reading
+    // (its card keeps its old list in memory); a due event and the next ones
+    // too, within the hour (the time of the reading stays before it).
     let readAt = now;
-    for (const event of events) {
+    for (const event of events.filter((item) => item.key === TRIGGERS.MOVED)) {
       if (!(await this.fire(event.key, event.data))) {
-        // Gladys refused (restarting?): this event and the next ones are
-        // tried again at the next reading, within the hour.
-        readAt = Math.min(readAt, event.at - 1);
-        if (event.key === TRIGGERS.MOVED) {
-          lists[event.card.id] = known[event.card.id];
-        } else {
-          break;
-        }
+        lists[event.card.id] = known[event.card.id];
+      }
+    }
+    for (const event of events.filter((item) => item.key !== TRIGGERS.MOVED)) {
+      if (!(await this.fire(event.key, event.data))) {
+        readAt = event.at - 1;
+        break;
       }
     }
     this.saved = { scope, readAt: Math.max(readAt, this.saved.readAt), lists };

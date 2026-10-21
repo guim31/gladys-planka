@@ -183,10 +183,10 @@ test('the events survive a restart: a move and a due time while down', async (t)
   clock.time = at(21, 20, 40); // after "Arroser les plantes" was due
   const second = await world(t, { clock, server, dataDir });
   assert.deepEqual(keys(second), [
-    'card_due:Arroser les plantes',
     'card_moved:Sortir les poubelles',
+    'card_due:Arroser les plantes',
   ]);
-  assert.equal(second.fake.sceneEvents[1].data.previous_list, 'À faire');
+  assert.equal(second.fake.sceneEvents[0].data.previous_list, 'À faire');
 
   await second.app.stop();
   clock.time = at(21, 23, 30); // midnight Paris is 90 min old: dropped
@@ -413,4 +413,51 @@ test('a reading of the old instance during a reconfiguration is dropped', async 
   await reading;
   assert.deepEqual(w.hub.cards, [], 'nothing of the old instance kept');
   assert.equal(w.fake.connectionStatus.connected, false);
+});
+
+test('a due event Gladys refuses does not lose a move of the same reading', async (t) => {
+  const clock = createClock();
+  const w = await world(t, { clock });
+  const publish = w.gladys.publishSceneEvent.bind(w.gladys);
+  let refuse = true;
+  t.mock.method(w.gladys, 'publishSceneEvent', async (key, data) => {
+    if (refuse && key === 'card_due') {
+      throw new Error('Gladys is restarting');
+    }
+    return publish(key, data);
+  });
+  w.server.move('Ranger le garage', LISTS.TODO);
+  clock.time = at(21, 20, 36);
+  await w.hub.poll();
+  assert.deepEqual(keys(w), ['card_moved:Ranger le garage']);
+  refuse = false;
+  clock.advance(60_000);
+  await w.hub.poll();
+  assert.deepEqual(keys(w).slice(1), ['card_due:Arroser les plantes']);
+});
+
+test('a card brought from another followed board is no move', async (t) => {
+  const w = await world(t);
+  const from = w.server.boards.get(BOARD_ID).included.cards;
+  const card = from.find((item) => item.name === 'Ranger le garage');
+  from.splice(from.indexOf(card), 1);
+  const courses = w.server.boards.get(COURSES_ID);
+  courses.included.cards.push({
+    ...card,
+    boardId: COURSES_ID,
+    listId: courses.included.lists.find((l) => l.type === 'active').id,
+  });
+  await w.hub.poll();
+  assert.deepEqual(w.fake.sceneEvents, []);
+  assert.equal(counters(w, COURSES_ID).open, 2);
+});
+
+test('two boards of the same name: both followed, distinct device names', async (t) => {
+  const server = new FakePlanka();
+  server.projectsAnswer.included.boards[1].name = 'Tâches de la maison';
+  server.boards.get(COURSES_ID).item.name = 'Tâches de la maison';
+  const w = await world(t, { server, config: { ...BASE_CONFIG, boards: 'Tâches de la maison' } });
+  const names = w.fake.discoveredDevices.map((device) => device.name);
+  assert.equal(names.length, 2);
+  assert.equal(new Set(names).size, 2, names.join(' / '));
 });
