@@ -1,0 +1,114 @@
+{
+  "items": [
+    {
+      "id": "1890957639840433158",
+      "createdAt": "2026-10-21T19:35:16.814Z",
+      "updatedAt": "2026-10-21T19:35:16.831Z",
+      "name": "Maison",
+      "description": null,
+      "backgroundType": null,
+      "backgroundGradient": null,
+      "isHidden": false,
+      "ownerProjectManagerId": "1890957639882376199",
+      "backgroundImageId": null,
+      "isFavorite": false
+    }
+  ],
+  "included": {
+    "projectManagers": [
+      {
+        "id": "1890957639882376199",
+        "createdAt": "2026-10-21T19:35:16.820Z",
+        "updatedAt": null,
+        "projectId": "1890957639840433158",
+        "userId": "1890956856260559873"
+      }
+    ],
+    "baseCustomFieldGroups": [],
+    "boards": [
+      {
+        "id": "1890957640519910408",
+        "createdAt": "2026-10-21T19:35:16.896Z",
+        "updatedAt": null,
+        "position": 65536,
+        "name": "Tâches de la maison",
+        "defaultView": "kanban",
+        "defaultCardType": "project",
+        "limitCardTypesToDefaultOne": false,
+        "alwaysDisplayCardCreator": false,
+        "displayCardAges": false,
+        "expandTaskListsByDefault": false,
+        "projectId": "1890957639840433158"
+      },
+      {
+        "id": "1890957641056781324",
+        "createdAt": "2026-10-21T19:35:16.960Z",
+        "updatedAt": null,
+        "position": 131072,
+        "name": "Courses",
+        "defaultView": "kanban",
+        "defaultCardType": "project",
+        "limitCardTypesToDefaultOne": false,
+        "alwaysDisplayCardCreator": false,
+        "displayCardAges": false,
+        "expandTaskListsByDefault": false,
+        "projectId": "1890957639840433158"
+      }
+    ],
+    "boardMemberships": [
+      {
+        "id": "1890957640545076233",
+        "createdAt": "2026-10-21T19:35:16.899Z",
+        "updatedAt": null,
+        "role": "editor",
+        "canComment": null,
+        "projectId": "1890957639840433158",
+        "boardId": "1890957640519910408",
+        "userId": "1890956856260559873"
+      },
+      {
+        "id": "1890957641090335757",
+        "createdAt": "2026-10-21T19:35:16.964Z",
+        "updatedAt": null,
+        "role": "editor",
+        "canComment": null,
+        "projectId": "1890957639840433158",
+        "boardId": "1890957641056781324",
+        "userId": "1890956856260559873"
+      }
+    ],
+    "customFields": [],
+    "notificationServices": [],
+    "users": [
+      {
+        "id": "1890956856260559873",
+        "createdAt": "2026-10-21T19:33:43.401Z",
+        "updatedAt": "2026-10-21T19:35:17.866Z",
+        "email": "demo@example.com",
+        "role": "admin",
+        "name": "Demo User",
+        "username": "demo",
+        "phone": null,
+        "organization": null,
+        "language": "en-US",
+        "apiKeyPrefix": "qy4RfMOd",
+        "subscribeToOwnCards": false,
+        "subscribeToCardWhenCommenting": true,
+        "turnOffRecentCardHighlighting": false,
+        "enableFavoritesByDefault": true,
+        "defaultEditorMode": "wysiwyg",
+        "defaultHomeView": "groupedProjects",
+        "defaultProjectsOrder": "byDefault",
+        "isDeactivated": false,
+        "autoLogoutMode": "30m",
+        "isTotpEnabled": false,
+        "totpEnabledAt": null,
+        "avatar": null,
+        "totpRecoveryCodesRemaining": 0,
+        "isDefaultAdmin": true,
+        "lockedFieldNames": ["email", "password", "name", "role", "username"]
+      }
+    ],
+    "backgroundImages": []
+  }
+}
